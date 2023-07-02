@@ -63,6 +63,33 @@ To enable simultaneously scrolling in `SwiftUI` we need to utilize another libra
 
     I recommend storing the `simultaneouslyScrollViewHandler` inside some view-model. E.g. an `@ObservedObject` or a `@StateObject`.
 
+#### Advanced Synchronize multiple `ScrollView`s and retain control of delegates
+Views like `PKCanvasView` are not SwiftUI native, yet are scrollViews under the covers. This can complicate the synchronization of a SwiftUI ScrollView and a UIKit `PKCanvasView'. 
+
+To synchronize in this situation follow the same steps above for SwiftUI support. Then for the UIKit view where you manage the delegate you will need to use a Coordinator to proxy the delegate methods back to the SwiftUI side and manually trigger the synchronize event on your `SimultaneouslyScrollViewHandler`. You can do that as follows:
+
+1) Initialize all the views scrolling offsets with the addition of the `PKCanvasView'.
+    ```swift
+    MyPKCanvasViewRepresentable {
+        ...
+    }
+    .introspectScrollView { simultaneouslyScrollViewHandler.unregisteredSync(scrollView: $0) }
+    ```
+1) Then in your coordinater delegate methods, simply pass the events to your `SimultaneouslyScrollViewHandler`.
+    ```swift
+    MyPKCanvasViewRepresentable(canvasView: $canvasView,
+               didScroll: { scrollview in  // <--- your coordinator callback to pass events to the simultaneouslyScrollViewHandler
+        simultaneouslyScrollViewHandler.scrollViewDidScroll(scrollview)
+    },
+               willBeginScroll: { scrollview in // <--- your coordinator callback to pass events to the simultaneouslyScrollViewHandler
+        simultaneouslyScrollViewHandler.scrollViewWillBeginDragging(scrollview)
+    })
+    .introspect(.scrollView, on: .iOS(.v16,.v17), customize: { scrollView in
+        simultaneouslyScrollViewHandler.unregisteredSync(scrollView: scrollView)
+    })
+    ```
+1) That's it 🥳🎉
+
 #### How it works
 `SwiftUI` doesn't provide any API to specify the `contentOffset` for `ScrollViews`. Therefore we need to access the underlying `UIKit` element and set the `contentOffset` there. This is where [SwiftUI-Introspect](https://github.com/siteline/SwiftUI-Introspect) comes in handy by providing access to the `UIKit` elements.
 
