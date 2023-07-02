@@ -30,6 +30,23 @@ internal class DefaultSimultaneouslyScrollViewHandler: NSObject, SimultaneouslyS
         checkIsContentOffsetAtBottom()
     }
 
+    func unregisteredSync(scrollView: UIScrollView) {
+        guard !scrollViewsStore.contains(scrollView) else {
+            return
+        }
+        
+        // DO NOT set the delegate or add this to the scrollViewsStore //
+        
+        // Scroll the new `ScrollView` to the current position of the others.
+        // Using the first `ScrollView` should be enough as all should be synchronized at this point already.
+        guard let currentContentOffset = scrollViewsStore.allObjects.first?.contentOffset else {
+            return
+        }
+        scrollView.setContentOffset(currentContentOffset, animated: false)
+
+        checkIsContentOffsetAtBottom()
+    }
+    
     func scrollAllToBottom(animated: Bool) {
         guard !scrollViewsStore.allObjects.isEmpty,
               let scrollView = scrollViewsStore.allObjects.first,

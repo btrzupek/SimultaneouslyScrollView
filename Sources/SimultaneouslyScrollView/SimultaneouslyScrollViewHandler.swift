@@ -18,8 +18,19 @@ public protocol SimultaneouslyScrollViewHandler {
     /// - Parameters:
     ///     - scrollView: The `ScrollView` that should be registered for simultaneously scrolling
     func register(scrollView: UIScrollView)
-
+    
+    /// Syncronizes an unregistered `UIScrollView`, which allows another object to own the
+    /// delegate for that 'UIScrollView', but allow it to participate in syncronization by publishing
+    /// its events from the delegate straight to the `scrollViewWillBeginDragging` and
+    /// `scrollViewDidScroll` functions
+    func unregisteredSync(scrollView: UIScrollView)
+    
     /// Helper method to scroll all registered `ScrollView`s to the bottom.
     func scrollAllToBottom(animated: Bool)
+    
+    /// Scrollview delegate methods, surfaced here for instances where the
+    /// participating scrollview is not fully managed by `register(scrollView: UIScrollView)` above
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView)
+    func scrollViewDidScroll(_ scrollView: UIScrollView)
 #endif
 }
